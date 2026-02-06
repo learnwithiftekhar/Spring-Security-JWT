@@ -50,6 +50,10 @@ This project demonstrates a secure REST API built with Spring Boot, utilizing JS
 
 4.  **JWT Secret:**
     *   The `app.jwt.secret` property in `application.properties` contains a long, randomly generated string. **Keep this secret safe and secure in production.**
+    *   You can generate a secure secret key using the following command:
+     ```bash
+     openssl rand -base64 64
+     ```
      ```properties
      app.jwt.secret=very-secure-and-complex-key-that-is-at-least-256-bits-long-for-production
      ```
@@ -62,58 +66,139 @@ This project demonstrates a secure REST API built with Spring Boot, utilizing JS
 
    The application will start on `http://localhost:8080` (default Spring Boot port).
 
-## API Endpoints
+## API Endpoints Summary
 
-*   **POST /api/auth/register:**
-    *   Registers a new user.
-    *   Request Body:
-        ```json
-        {
-          "username": "newuser",
-          "password": "newpassword",
-          "role": "ROLE_USER"
-        }
-        ```
-    * `role` is optional, if not provided, default role will be `USER`.
-   
+| Category | Method | Endpoint | Description | Auth Required |
+| :--- | :--- | :--- | :--- | :--- |
+| Authentication | POST | `/api/auth/register` | Register a new user | No |
+| Authentication | POST | `/api/auth/login` | Login and get tokens | No |
+| Authentication | POST | `/api/auth/refresh-token` | Refresh access token | No |
+| Products | GET | `/api/products` | Get all products | Yes (Any) |
+| Products | GET | `/api/products/{id}` | Get product by ID | Yes (Any) |
+| Products | POST | `/api/products` | Create a new product | Yes (Admin) |
+| Products | PUT | `/api/products/{id}` | Update a product | Yes (Admin) |
+| Products | DELETE | `/api/products/{id}` | Delete a product | Yes (Admin) |
 
-*   **POST /api/auth/login:**
-    *   Logs in a user and returns JWT tokens.
-    *   Request Body:
-        ```json
-        {
-          "username": "existinguser",
-          "password": "userpassword"
-        }
-        ```
+## API Endpoints and curl Requests
 
-*   **POST /api/auth/refresh-token:**
-    *   Refreshes an access token using a refresh token.
-    *   Request Body:
-    ```json
-    {
-      "refreshToken": "eyJhbGciOiJIUzUxMiJ9..."
-    }
-    ```
-*   **GET /api/products:**
-    *   Retrieves all products.
-    *   Requires a valid access token.
-* **GET /api/products/{id}:**
-    *   Retrieves product by id.
-    *   Requires a valid access token.
-* **POST /api/products:**
-    * create new product
-    * Request body example:
-    ```json
-        {
-            "name": "product name",
-            "price": 10
-        }
-    ```
-    *   Requires a valid access token.
-*   **DELETE /api/products/{id}**:
-    * Delete product by id.
-    *   Requires a valid access token.
+### Authentication
+
+#### 1. Register User
+**POST** `/api/auth/register`
+
+Registers a new user.
+
+**curl Request:**
+```bash
+curl -X POST http://localhost:8080/api/auth/register \
+     -H "Content-Type: application/json" \
+     -d '{
+           "fullName": "John Doe",
+           "username": "johndoe",
+           "password": "password123",
+           "role": "ROLE_ADMIN"
+         }'
+```
+
+#### 2. Login
+**POST** `/api/auth/login`
+
+Authenticates a user and returns an access token and a refresh token.
+
+**curl Request:**
+```bash
+curl -X POST http://localhost:8080/api/auth/login \
+     -H "Content-Type: application/json" \
+     -d '{
+           "username": "johndoe",
+           "password": "password123"
+         }'
+```
+
+#### 3. Refresh Token
+**POST** `/api/auth/refresh-token`
+
+Generates a new access token using a valid refresh token.
+
+**curl Request:**
+```bash
+curl -X POST http://localhost:8080/api/auth/refresh-token \
+     -H "Content-Type: application/json" \
+     -d '{
+           "refreshToken": "YOUR_REFRESH_TOKEN_HERE"
+         }'
+```
+
+---
+
+### Products
+
+All product endpoints require a valid **Access Token** in the `Authorization` header.
+
+#### 4. Get All Products
+**GET** `/api/products`
+
+Retrieves a list of all products.
+
+**curl Request:**
+```bash
+curl -X GET http://localhost:8080/api/products \
+     -H "Authorization: Bearer YOUR_ACCESS_TOKEN_HERE"
+```
+
+#### 5. Get Product by ID
+**GET** `/api/products/{id}`
+
+Retrieves a single product by its ID.
+
+**curl Request:**
+```bash
+curl -X GET http://localhost:8080/api/products/1 \
+     -H "Authorization: Bearer YOUR_ACCESS_TOKEN_HERE"
+```
+
+#### 6. Create Product (Admin Only)
+**POST** `/api/products`
+
+Creates a new product. Requires `ROLE_ADMIN`.
+
+**curl Request:**
+```bash
+curl -X POST http://localhost:8080/api/products \
+     -H "Content-Type: application/json" \
+     -H "Authorization: Bearer YOUR_ACCESS_TOKEN_HERE" \
+     -d '{
+           "name": "Laptop",
+           "price": 1200.00
+         }'
+```
+
+#### 7. Update Product (Admin Only)
+**PUT** `/api/products/{id}`
+
+Updates an existing product. Requires `ROLE_ADMIN`.
+
+**curl Request:**
+```bash
+curl -X PUT http://localhost:8080/api/products/1 \
+     -H "Content-Type: application/json" \
+     -H "Authorization: Bearer YOUR_ACCESS_TOKEN_HERE" \
+     -d '{
+           "name": "Updated Laptop",
+           "price": 1100.00
+         }'
+```
+
+#### 8. Delete Product (Admin Only)
+**DELETE** `/api/products/{id}`
+
+Deletes a product by its ID. Requires `ROLE_ADMIN`.
+
+**curl Request:**
+```bash
+curl -X DELETE http://localhost:8080/api/products/1 \
+     -H "Authorization: Bearer YOUR_ACCESS_TOKEN_HERE"
+```
 
 ## Further Development
 
@@ -121,6 +206,5 @@ This project demonstrates a secure REST API built with Spring Boot, utilizing JS
 *   **Comprehensive testing:** Add unit and integration tests.
 *   **Enhanced security:** Consider additional security measures, such as input sanitization and rate limiting.
 *   **Role based authorization**
-* **Validation for all entities**
-*   **Product update**
+*   **Validation for all entities**
 
