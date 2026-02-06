@@ -1,6 +1,7 @@
 package com.learnwithiftekhar.jwtsecurity.service;
 
 import com.learnwithiftekhar.jwtsecurity.dto.TokenPair;
+import com.learnwithiftekhar.jwtsecurity.enums.TokenType;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
@@ -37,15 +38,17 @@ public class JwtService {
         return new TokenPair(accessToken, refreshToken);
     }
 
-    // Generate access token
+    // Generate the access token
     public String generateAccessToken(Authentication authentication) {
-        return generateToken(authentication, jwtExpirationMs, new HashMap<>());
+        Map<String, String> claims = new HashMap<>();
+        claims.put("tokenType", TokenType.ACCESS.name());
+        return generateToken(authentication, jwtExpirationMs, claims);
     }
 
     // Generate refresh token
     public String generateRefreshToken(Authentication authentication) {
         Map<String, String> claims = new HashMap<>();
-        claims.put("tokenType", "refresh");
+        claims.put("tokenType", TokenType.REFRESH.name());
         return generateToken(authentication, refreshExpirationMs, claims);
     }
 
@@ -93,7 +96,15 @@ public class JwtService {
         if(claims == null) {
             return false;
         }
-        return "refresh".equals(claims.get("tokenType"));
+        return TokenType.REFRESH.name().equals(claims.get("tokenType"));
+    }
+
+    public boolean isAccessToken(String token) {
+        Claims claims = extractAllClaims(token);
+        if(claims == null) {
+            return false;
+        }
+        return TokenType.ACCESS.name().equals(claims.get("tokenType"));
     }
 
     private Claims extractAllClaims(String token) {
